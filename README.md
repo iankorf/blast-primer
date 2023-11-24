@@ -510,12 +510,19 @@ to ungapped alignments.
 
 ## BLAST
 
+Unfinished section
+
 + multiple HSPs
-+ seeding
-+ extension
++ algorithmic details
+	+ seeding
+	+ extension
 + masking
 	+ complexity filters
 	+ hard
 	+ soft
 	+ word
 + gapped vs ungapped
++ e-value adjustments
+	+ combined HSPs
+	+ length
+	+ composition
