@@ -377,7 +377,7 @@ summarizes a couple runs of `evd` with different match and mismatch values.
 
 | Match | Mismatch | Score | Length | Percent |
 |:-----:|:--------:|:-----:|:------:|:-------:|
-|   +1  |    -1    | 12.85 |  22.87 |  80.29  | <--- not updated yet
+|   +1  |    -1    | 11.57 |  20.08 |  81.31  |
 |   +1  |    -2    |  9.93 |  11.14 |  97.07  |
 |   +1  |    -3    |  9.72 |  10.00 |  99.48  |
 
@@ -399,10 +399,10 @@ constant.
 
 | Match | Mismatch | GapO | GapE | Score | Length | Percent |
 |:-----:|:--------:|:----:|:----:|:-----:|:------:|:-------:|
-|   +1  |    -2    |  -3  |  -3  | 11.11 |  13.72 |  95.11  | needs update
-|   +1  |    -2    |  -2  |  -2  | 11.86 |  18.31 |  90.14  |
-|   +1  |    -2    |  -2  |  -1  | 12.09 |  21.68 |  86.86  |
-|   +1  |    -1    |  -2  |  -2  | 15.53 |  56.37 |  70.17  |
+|   +1  |    -2    |  -3  |  -3  | 10.06 |  12.13 |  95.87  |
+|   +1  |    -2    |  -2  |  -2  | 10.65 |  16.20 |  90.52  |
+|   +1  |    -2    |  -2  |  -1  | 10.90 |  19.12 |  87.53  |
+|   +1  |    -1    |  -2  |  -2  | 13.97 |  49.11 |  70.97  |
 
 Notice that the smaller the gap penalties, the longer and lower pecent identity
 of the alignment.
@@ -413,19 +413,21 @@ Every scoring system has a _stringency_. Some scoring systems are stringent
 while others are permissive. One way to describe the stringency is by the
 average percent identity of random alignments.
 
-| Match | Mismatch | GapO | GapE | Pct | Stringency
-|:-----:|:--------:|:----:|:----:|:---:|:-----------
-|   +1  |    -3    |      |      |  99 | very high
-|   +1  |    -2    |      |      |  97 | high
-|   +1  |    -2    |  -3  |  -3  |  95 | high
-|   +1  |    -2    |  -2  |  -2  |  90 | moderate
-|   +1  |    -2    |  -2  |  -1  |  87 | moderate
-|   +1  |    -1    |      |      |  80 | low
-|   +1  |    -1    |  -2  |  -2  |  70 | very low
+| Match | Mismatch | GapO | GapE |  Pct  | Stringency
+|:-----:|:--------:|:----:|:----:|:-----:|:-----------
+|   +1  |    -3    |      |      |  99.5 | very high
+|   +1  |    -2    |      |      |  97.1 | high
+|   +1  |    -2    |  -3  |  -3  |  95.9 | high
+|   +1  |    -2    |  -2  |  -2  |  90.5 | moderate
+|   +1  |    -2    |  -2  |  -1  |  87.5 | moderate
+|   +1  |    -1    |      |      |  81.3 | low
+|   +1  |    -1    |  -2  |  -2  |  71.0 | very low
 
 The orignal version of BLAST defaulted to +5/-4 with no gapping allowed. Later,
-this was +1/-3 with gaps -5/-2. The current version is +1/-2 with a -2.5/-2.5
-gap penalty.
+this was +1/-3 with gaps -5/-2. The current version is +1/-2 with gaps
+-2.5/-2.5. EMBOSS `water` defaults to +5/-4 with gaps -10/-0.5. Clearly,
+despite how critical they are, there is no consensus on the proper default
+alignment parameters.
 
 Note that there are 2 ways to describe gap costs. NCBI-BLAST versions 2.0+
 follow a linear formula as y = mx + b, where y is the total gap cost, b is the
@@ -473,9 +475,9 @@ dropping k and lambda, and rounding e to 2.
 
 The number of alignments expected by chance depends on the search space (MN)
 and the score of an alignment (s). If we double the search space (e.g. 2M), we
-double the number of alignments expected by chance. If we increase the score of
-an alignment by 1, we halve the number of alignments by chance. We can gain
-several really important intuitions from this:
+double the number of alignments expected by chance. If we decrease the score of
+an alignment by 1, we also double the number of alignments by chance. We can
+gain several really important intuitions from this:
 
 + Low scoring alignments can occur frequently
 + High scoring alignments do not occur by chance
@@ -498,7 +500,8 @@ significance of alignment scores.
 Lambda is a critical parameter that normalizes different scoring schemes. You
 can imagine that a +1/-1 scoring scheme should behave very similarly to +2/-2.
 In fact, they behave identically. The difference is that +1/-1 has a lambda
-twice as large as +2/-2.
+twice as large as +2/-2. As a result, it doesn't matter if you use a +1/-1 or
++2/-2, the e-values will be exactly the same.
 
 It turns out that the K-A equation can be applied to gapped alignments by
 borrowing the lambda from an equally stringent scoring scheme. Basically, you
