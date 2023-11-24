@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import re
+import statistics
+import sys
+
+import seqlib
+
+## CLI
+parser = argparse.ArgumentParser()
+parser.add_argument('--length', required=True, type=int,
+	help='length of sequences')
+parser.add_argument('--matrix', required=True,
+	help='soring matrix')
+parser.add_argument('--gapo', required=False, type=float, default=10,
+	help='gap open penalty [default %(default)i)]')
+parser.add_argument('--gape', required=False, type=float, default=10,
+	help='gap extend penalty [default %(default)i]')
+parser.add_argument('--count', required=False, type=int, default=2,
+	help='# of alignments to perform [default %(default)i]')
+parser.add_argument('--verbose', action='store_true',
+	help='stream output')
+arg = parser.parse_args()
+
+## create FASTA file of random sequences
+with open('temp.fa', 'w') as fp:
+	for i in range(arg.count):
+		s = seqlib.random_seq(arg.length)
+		fp.write(f'>r{i}\n{s}\n')
+
+## run water
+seqs = '-asequence temp.fa -bsequence temp.fa'
+mat = f'-datafile {arg.matrix}'
+gaps = f'-gapopen {arg.gapo} -gapextend {arg.gape}'
+out = 'temp.out'
+os.system(f'water {seqs} {mat} {gaps} {out} ')
+
+## collect properties
+scores = []
+percents = []
+lengths = []
+with open(out) as fp:
+	for line in fp:
+		if arg.verbose:
+			print(line, file=sys.stderr, end='')
+		if line.startswith('# Score:'):
+			scores.append(float(line[9:-1]))
+		if line.startswith('# Identity:'):
+			m = re.search('(\d+)\/(\d+)', line)
+			identities =  int(m.group(1))
+			length = int(m.group(2))
+			lengths.append(length)
+			percents.append(int(100*identities/length))
+
+## output
+for s, l, p in zip(scores[1:], lengths[1:], percents[1:]):
+	print(s, l, p, sep='\t')

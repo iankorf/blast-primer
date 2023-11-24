@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+
+import argparse
+import seqlib
+
+parser = argparse.ArgumentParser()
+parser.add_argument('length', type=int, help='length of sequence(s)')
+parser.add_argument('--count', required=False, type=int, default=1,
+	help='# of sequences to generate [default %(default)i]')
+parser.add_argument('--wrap', required=False, type=int, default=50,
+	help='line length [default %(default)i]')
+arg = parser.parse_args()
+
+for i in range(arg.count):
+	print(f'>random-{i+1}')
+	seq = seqlib.random_seq(arg.length)
+	for j in range(0, len(seq), arg.wrap):
+		print(seq[j:j+arg.wrap])
