@@ -541,7 +541,7 @@ The plus (+) symbol indicates positions where the amino acids in the aligned seq
 
 Bl2seq also outputs Lambda, K, and H (variables used to calculate the statistics of alignment, more on them in the previous section about the Karlin - Altschul equation). These vaiables are used to determine the significance of the alignment which helps us understand the validity of its MSP.
 
-In the alignment above the Lambda, K, and H variables should be this.
+In the alignment above the Lambda, K, and H variables should be the following:
 
 ```
 Lambda     K      H
