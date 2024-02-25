@@ -1,16 +1,15 @@
-BLAST Primer
-============
+# BLAST Primer
 
-## Contents ##
+## Contents
 
-+ Assumptions
-+ Setup
-+ Global and Local Alignment
-+ Random Expectation
-+ Local Alignment Statistics
-+ BLAST
+- Assumptions
+- Setup
+- Global and Local Alignment
+- Random Expectation
+- Local Alignment Statistics
+- BLAST
 
-## Assumptions ##
+## Assumptions
 
 Sequence alignment exists at the intersection of genetics, molecular biology,
 statistics, computer science, and information technology. If you're unfamiliar
@@ -22,14 +21,14 @@ This primer assumes you have an x86/AMD chipset running Linux (either native or
 virtualized in Windows) or an older Mac with an Intel chipset. If any of the
 following situations apply to you, expect some pain if not outright failure.
 
-+ Newer (post-2020-ish) Mac with Apple Silicon chips
-+ Windows running Windows Substem for Linux (WSL)
-+ Windows running Cygwin
-+ Windows running GitBash
-+ ChromeOS
-+ Raspberry Pi or other SBC
+- Newer (post-2020-ish) Mac with Apple Silicon chips
+- Windows running Windows Substem for Linux (WSL)
+- Windows running Cygwin
+- Windows running GitBash
+- ChromeOS
+- Raspberry Pi or other SBC
 
-## Setup ##
+## Setup
 
 ### Intel-Mac
 
@@ -38,9 +37,9 @@ your `Terminal` application.
 
 ### Windows
 
-+ Install VirtualBox
-+ Create a VM with 2-4G RAM and a flexible size drive of 40G
-+ Install a lightweight Linux distribution like Lubuntu, LinuxLite, or Mint
+- Install VirtualBox
+- Create a VM with 2-4G RAM and a flexible size drive of 40G
+- Install a lightweight Linux distribution like Lubuntu, LinuxLite, or Mint
 
 ### Miniconda
 
@@ -184,9 +183,9 @@ Both global and local alignment are based on optimizing an alignent _score_.
 You generally gain score when letters are the same and lose score when they are
 different. In a simple scoring scheme, there are 3 types of scores.
 
-+ Match: reward for matching letters
-+ Mismatch: the penalty for mismatched letters
-+ Gap: the penalty for including a gap
+- Match: reward for matching letters
+- Mismatch: the penalty for mismatched letters
+- Gap: the penalty for including a gap
 
 In the global and local alignment examples above, we didn't pay much attention
 to the alignment parameters (match, mismatch, gap), but it turns out that they
@@ -290,7 +289,7 @@ that is 10 nt long costs 10 times that of a single gap. Sequence gaps tend to
 come in clusters, so we often use a two gap costs, one to open, and one to
 extend. Let's see what happens when we vary the two.
 
-Here is  what happens with gapopen 2 and gapextend 1. As you can see, it's
+Here is what happens with gapopen 2 and gapextend 1. As you can see, it's
 not the same as any of the previous alignments.
 
 ```
@@ -376,10 +375,10 @@ parameters and examine the properties of the alignments. The table below
 summarizes a couple runs of `evd` with different match and mismatch values.
 
 | Match | Mismatch | Score | Length | Percent |
-|:-----:|:--------:|:-----:|:------:|:-------:|
-|   +1  |    -1    | 11.57 |  20.08 |  81.31  |
-|   +1  |    -2    |  9.93 |  11.14 |  97.07  |
-|   +1  |    -3    |  9.72 |  10.00 |  99.48  |
+| :---: | :------: | :---: | :----: | :-----: |
+|  +1   |    -1    | 11.57 | 20.08  |  81.31  |
+|  +1   |    -2    | 9.93  | 11.14  |  97.07  |
+|  +1   |    -3    | 9.72  | 10.00  |  99.48  |
 
 **The choice of match and mismatch determines what you find.**
 
@@ -396,13 +395,12 @@ Let's do the same `evd` experiments, but this time we'll add various gap
 opening and extension values. Here, we'll keep the +1/-2 scoring system
 constant.
 
-
 | Match | Mismatch | GapO | GapE | Score | Length | Percent |
-|:-----:|:--------:|:----:|:----:|:-----:|:------:|:-------:|
-|   +1  |    -2    |  -3  |  -3  | 10.06 |  12.13 |  95.87  |
-|   +1  |    -2    |  -2  |  -2  | 10.65 |  16.20 |  90.52  |
-|   +1  |    -2    |  -2  |  -1  | 10.90 |  19.12 |  87.53  |
-|   +1  |    -1    |  -2  |  -2  | 13.97 |  49.11 |  70.97  |
+| :---: | :------: | :--: | :--: | :---: | :----: | :-----: |
+|  +1   |    -2    |  -3  |  -3  | 10.06 | 12.13  |  95.87  |
+|  +1   |    -2    |  -2  |  -2  | 10.65 | 16.20  |  90.52  |
+|  +1   |    -2    |  -2  |  -1  | 10.90 | 19.12  |  87.53  |
+|  +1   |    -1    |  -2  |  -2  | 13.97 | 49.11  |  70.97  |
 
 Notice that the smaller the gap penalties, the longer and lower pecent identity
 of the alignment.
@@ -413,15 +411,15 @@ Every scoring system has a _stringency_. Some scoring systems are stringent
 while others are permissive. One way to describe the stringency is by the
 average percent identity of random alignments.
 
-| Match | Mismatch | GapO | GapE |  Pct  | Stringency
-|:-----:|:--------:|:----:|:----:|:-----:|:-----------
-|   +1  |    -3    |      |      |  99.5 | very high
-|   +1  |    -2    |      |      |  97.1 | high
-|   +1  |    -2    |  -3  |  -3  |  95.9 | high
-|   +1  |    -2    |  -2  |  -2  |  90.5 | moderate
-|   +1  |    -2    |  -2  |  -1  |  87.5 | moderate
-|   +1  |    -1    |      |      |  81.3 | low
-|   +1  |    -1    |  -2  |  -2  |  71.0 | very low
+| Match | Mismatch | GapO | GapE | Pct  | Stringency |
+| :---: | :------: | :--: | :--: | :--: | :--------- |
+|  +1   |    -3    |      |      | 99.5 | very high  |
+|  +1   |    -2    |      |      | 97.1 | high       |
+|  +1   |    -2    |  -3  |  -3  | 95.9 | high       |
+|  +1   |    -2    |  -2  |  -2  | 90.5 | moderate   |
+|  +1   |    -2    |  -2  |  -1  | 87.5 | moderate   |
+|  +1   |    -1    |      |      | 81.3 | low        |
+|  +1   |    -1    |  -2  |  -2  | 71.0 | very low   |
 
 The orignal version of BLAST defaulted to +5/-4 with no gapping allowed. Later,
 this was +1/-3 with gaps -5/-2. The current version is +1/-2 with gaps
@@ -444,7 +442,6 @@ the random background of pairwise alignment. Performing sequence alignment
 experiments without considering alignment parameters is sort of like baking and
 not caring about the temperature of the oven.
 
-
 ## Local Alignment Statistics
 
 Any two sequences compared by Smith-Waterman will have a maximum scoring pair.
@@ -458,20 +455,20 @@ Karlin-Altschul statistics. The K-A equation tells us how often a score can
 happen by chance. For example, it can tell you that a score of 10 is supposed
 to occur very often and a score of 100 is not. Here's the equation.
 
->E = kMNe^-ls
+> E = kMNe^-ls
 
-+ E: the expected number of alignments by chance (e-value)
-+ k: a minor constant we won't discuss
-+ M: the size of one sequence
-+ N: the size of the other sequence
-+ e: 2.71828...
-+ l: lambda is the scaling factor of the matrix
-+ s: the score of the alignment
+- E: the expected number of alignments by chance (e-value)
+- k: a minor constant we won't discuss
+- M: the size of one sequence
+- N: the size of the other sequence
+- e: 2.71828...
+- l: lambda is the scaling factor of the matrix
+- s: the score of the alignment
 
 To get more intuition on how the K-A equation works, let's simplify it by
 dropping k and lambda, and rounding e to 2.
 
->E = MN2^-s
+> E = MN2^-s
 
 The number of alignments expected by chance depends on the search space (MN)
 and the score of an alignment (s). If we double the search space (e.g. 2M), we
@@ -479,9 +476,9 @@ double the number of alignments expected by chance. If we decrease the score of
 an alignment by 1, we also double the number of alignments by chance. We can
 gain several really important intuitions from this:
 
-+ Low scoring alignments can occur frequently
-+ High scoring alignments do not occur by chance
-+ Huge search spaces may contain random, high scoring alignments
+- Low scoring alignments can occur frequently
+- High scoring alignments do not occur by chance
+- Huge search spaces may contain random, high scoring alignments
 
 The K-A equation makes a few assumptions:
 
@@ -512,21 +509,63 @@ to ungapped alignments.
 
 Unfinished section
 
-+ bl2seq examples to follow above
-+ blast databases
-+ more
+## bl2seq examples to follow above
 
-+ multiple HSPs
-+ algorithmic details
-	+ seeding
-	+ extension
-+ masking
-	+ complexity filters
-	+ hard
-	+ soft
-	+ word
-+ gapped vs ungapped
-+ e-value adjustments
-	+ combined HSPs
-	+ length
-	+ composition
+Bl2seq performs a comparison between two sequences (either protiens or nucleotides)
+using either the blastn or blastp algorithm. The command compares a sequence against either
+a local databse (more on that in the next section) or a second sequence.
+
+Let's compare the two protiens Gallus Gallus and Drosophila Melanogaster. They should be in the files "dm" and "gg".
+
+```
+bl2seq -i gg -j dm -p blastp
+```
+
+Once this command is run, you should see an output detailing the alignment of the two sequences. Lets look more in depth into what it's telling us.
+
+```
+Query: 2   DDDIAALVVDNGSGMCKAGFAGDDAPRAVFPSIVGRPRHQGVMVGMGQKDSYVGDEAQSK 61
+           D+++AALVVDNGSGMCKAGFAGDDAPRAVFPSIVGRPRHQGVMVGMGQKDSYVGDEAQSK
+Sbjct: 3   DEEVAALVVDNGSGMCKAGFAGDDAPRAVFPSIVGRPRHQGVMVGMGQKDSYVGDEAQSK 62
+```
+
+```
+Query: 122 IMFETFNTPAMYVAIQAVLSLYASGRTTGIVMDSGDGVTHTVPIYEGYA----LPHAILR 177
+           IMFETFNTPAMYVAIQAVLSLYASGRTTGIV+DSGDGV+HTVPIYEGYA    LPHAILR
+Sbjct: 120 IMFETFNTPAMYVAIQAVLSLYASGRTTGIVLDSGDGVSHTVPIYEGYAAAAALPHAILR 179
+```
+
+In these two alignments, pluses, minuses, and blank spaces are used to represent different aspects of the alginemnt between the query and the subject.
+
+The plus (+) symbol indicates positions where the amino acids in the aligned sequences are similar. The minus (-) symbol indicates positions where there is an insertion or deletion in one of the sequences. A blank space indicates positions in the alginment where the amino acids have no match or similairties.
+
+Bl2seq also outputs Lambda, K, and H (variables used to calculate the statistics of alignment, more on them in the previous section about the Karlin - Altschul equation). These vaiables are used to determine the significance of the alignment which helps us understand the validity of its MSP.
+
+In the alignment above the Lambda, K, and H variables should be this.
+
+```
+Lambda     K      H
+   0.319    0.135    0.401
+
+Gapped
+Lambda     K      H
+   0.267   0.0410    0.140
+```
+
+- blast databases
+- more
+
+- multiple HSPs
+- algorithmic details
+  - seeding
+  - extension
+- masking
+  - complexity filters
+  - hard
+  - soft
+  - word
+- gapped vs ungapped
+- e-value adjustments
+  - combined HSPs
+  - length
+  - composition
