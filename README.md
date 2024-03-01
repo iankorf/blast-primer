@@ -513,15 +513,15 @@ Unfinished section
 
 Bl2seq performs a comparison between two sequences (either protiens or nucleotides)
 using either the blastn or blastp algorithm. The command compares a sequence against either
-a local databse (more on that in the next section) or a second sequence.
+a local databse or a second sequence.
 
-Let's compare the two protiens Gallus Gallus and Drosophila Melanogaster. They should be in the files "dm" and "gg".
+Let's compare the two protiens Gallus gallus and Drosophila melanogaster. They should be in the files `dm.fa` and `gg.fa`.
 
 ```
 bl2seq -i gg -j dm -p blastp
 ```
 
-Once this command is run, you should see an output detailing the alignment of the two sequences. Lets look more in depth into what it's telling us.
+Once this command is run, you should see an output detailing the alignment of the two sequences.
 
 ```
 Query: 2   DDDIAALVVDNGSGMCKAGFAGDDAPRAVFPSIVGRPRHQGVMVGMGQKDSYVGDEAQSK 61
