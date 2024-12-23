@@ -1,0 +1,9 @@
+name: blast-primer
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - emboss
+  - blast-legacy
+  - blast

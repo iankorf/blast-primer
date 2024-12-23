@@ -41,27 +41,12 @@ your `Terminal` application.
 - Create a VM with 2-4G RAM and a flexible size drive of 40G
 - Install a lightweight Linux distribution like Lubuntu, LinuxLite, or Mint
 
-### Miniconda
-
-Install Miniconda and then perform the following post-installtion tweaks to
-ensure packages from BioConda are installed correctly.
-
-```
-conda config --add channels defaults
-conda config --add channels bioconda
-conda config --add channels conda-forge
-conda config --set channel_priority strict
-```
-
 ### Install EMBOSS and BLAST
 
-Create a conda environment for this primer and install emboss and 2 different
-versions of blast. This will take a couple minutes to install, and will end up
-consuming about 3G of space.
+Install Miniforge. Then create a conda environment with EMBOSS and BLAST.
 
 ```
-conda create --name blast-primer emboss blast-legacy blast
-conda activate blast-primer
+conda env create -f blast-primer.yml
 ```
 
 ## Global and Local Alignment
