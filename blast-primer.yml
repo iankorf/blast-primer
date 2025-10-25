@@ -7,3 +7,4 @@ dependencies:
   - emboss
   - blast-legacy
   - blast
+  - time

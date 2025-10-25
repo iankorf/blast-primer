@@ -17,16 +17,9 @@ with these topics, some parts of this will be confusing. This primer is meant
 for my students and interns, so there isn't much hand-holding for the general
 public. You will need to be comfortable with a Unix CLI to proceed.
 
-This primer assumes you have an x86/AMD chipset running Linux (either native or
-virtualized in Windows) or an older Mac with an Intel chipset. If any of the
-following situations apply to you, expect some pain if not outright failure.
-
-- Newer (post-2020-ish) Mac with Apple Silicon chips
-- Windows running Windows Substem for Linux (WSL)
-- Windows running Cygwin
-- Windows running GitBash
-- ChromeOS
-- Raspberry Pi or other SBC
+This primer assumes you have an x86/AMD chipset running Linux (either
+native or virtualized in Windows) or a Mac. If you're on Windows or
+using some unusual OS or hardware, some parts of the exercises may fail.
 
 ## Setup
 
@@ -41,9 +34,13 @@ your `Terminal` application.
 - Create a VM with 2-4G RAM and a flexible size drive of 40G
 - Install a lightweight Linux distribution like Lubuntu, LinuxLite, or Mint
 
-### Install EMBOSS and BLAST
+### Install Conda, EMBOSS, and BLAST
 
-Install Miniforge. Then create a conda environment with EMBOSS and BLAST.
+Installing Conda and creating the environment are not instant: be
+prepared to wait a few minutes. Install Conda via miniforge. See the
+directions at: https://github.com/conda-forge/miniforge
+
+Create a conda environment containing EMBOSS and BLAST.
 
 ```
 conda env create -f blast-primer.yml
@@ -494,19 +491,17 @@ scoring scheme it already knows about.
 
 ## BLAST
 
-Unfinished section
+### bl2seq
 
-## bl2seq examples to follow above
-
-Bl2seq performs a comparison between two sequences (either protiens or nucleotides)
-using either the blastn or blastp algorithm. The command compares a sequence against either
-a local databse or a second sequence.
+Bl2seq performs a comparison between two sequences (either protiens or
+nucleotides) using either the blastn or blastp algorithm. The command
+compares a sequence against either a local databse or a second sequence.
 
 Let's compare the two protiens Gallus gallus and Drosophila
 melanogaster. They should be in the files `dm.fa` and `gg.fa`.
 
 ```
-bl2seq -i gg -j dm -p blastp
+bl2seq -i gg.fa -j dm.fa -p blastp
 ```
 
 Once this command is run, you should see an output detailing the alignment of the two sequences.
@@ -551,8 +546,110 @@ Lambda     K      H
    0.267   0.0410    0.140
 ```
 
-- blast databases
-- more
+### blast-legacy
+
+BLAST is usually used to search/align one (or more) sequences to a
+databases of sequences. For example, we could search all of the E.coli
+proteins vs. all of the Y.pestis proteins. To do that, one of the fasta
+files must be turned into the database. The command that turns fasta
+files into blast-able databases is called `formatdb`.
+
+```
+formatdb -i E.coli.faa
+```
+
+After running `formatdb`, you should see some new files with extensions
+`.phr`, `.psq`, and `.pin`. These files comprise the blast database.
+
+Our stated goal was to align all of the Y.pestis proteins to E.coli.
+However, we don't have any idea how long that will take. It could take
+seconds or hours. So the first thing we should do is make a subset of
+the Y.pestis proteome and search that against E.coli. A simple `wc` will tell us
+how many lines are in the file.
+
+```
+wc Y.pestis.faa
+```
+
+There are about 24k lines. Let's make a smaller version of Y.pestis containing
+about 1% of that total.
+
+```
+head -2400 Y.pestis.faa > mini.faa
+```
+
+A simple `grep` verifies that there are around 1% of the proteins in the
+`mini.faa` compare to the full proteome.
+
+```
+grep -c ">" Y.pestis.faa mini.faa
+```
+
+Now it's finally time to run BLAST. Since both the query and database
+are proteins, the program type is `blastp`. We'll save the output in a
+throwaway file called `foo`. We'll prepend the command with `time` to
+monitor resources. Here's the command line:
+
+```
+time blastall -p blastp -d E.coli.faa -i mini.faa > foo
+```
+
+This should take under 10 seconds (depending on your hardware). You will
+see a few warnings about Selenocysteine that you can ignore. Examine the
+output file with `less foo`. By default, BLAST reports alignment with
+high E-values, which represent random similarities. In the future, we
+will set `-e 1e-5` to remove the really poor alignments.
+
+By default `blastall` uses only 1 cpu. You can speed up the search by
+giving it more CPUs with the `-a` parameter. Here are the results I got
+with additional CPUs.
+
+| CPUs | Time | CLI
+|:----:|:----:|:-------------------------------------------------------
+|   1  | 2.17 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 1 > foo`
+|   2  | 1.31 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 2 > foo`
+|   3  | 1.08 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 3 > foo`
+|   4  | 0.92 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 4 > foo`
+
+As you can see, there are diminishing returns with more CPUs. Some parts
+of BLAST cannot be parallelized across multiple CPUs. For example, all
+of the CPUs must eventually write their output, and this is not
+parallelized.
+
+Now it's time to search the whole Y.pestis proteome against the whole
+E.coli proteome. We can now estimate how long the job will take: about
+100x longer with the full Y.pestis proteome. In reality, it may take
+longer or shorter than the estimate, but at least you have some idea.
+
+```
+blastall -p blastp -d E.coli.faa -i Y.pestis.faa -e 1e-5 -a 4 > yve.blastp
+```
+
+### Parsing a BLAST report
+
+The `yve.blastp` output file is 28M. That's a lot of text to look
+through for a human. If you don't need to examine the alignments, you
+can get the numerical data by changing the output format to tabular
+using `-m 9`. This reduces the file to just 3M.
+
+Here are a couple BLAST-based programming challenges:
+
+1. Maybe the unique proteins in Y.pestis are what cause plague. Find
+which proteins are in Y.pestis but not E.coli.
+
+2. Find the orthologs between E.coli and Y.pestis. Orthologs are defined
+as the reciprocal best match. That is, the best matching pair of
+proteins going from E.coli to Y.pestis are the same as the best pair
+from Y.pestis to E.coli.
+
+### blast (modern)
+
+UNFINISHED CONTENT HERE
+
+
+`makebalstdb` creates a few more files: `.pdb`, `.pot`, `.pto`, `.ptf`,
+and `.pjs`.
+
 
 - multiple HSPs
 - algorithmic details
