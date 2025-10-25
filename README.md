@@ -327,7 +327,7 @@ are not bell curve, but a smushed bell curve called an extreme value
 distribution (EVD). Let's make a quick histogram to observe.
 
 ```
-cut -f out | sort -n | uniq -c
+cut -f1 out | sort -n | uniq -c
 ```
 
 As you can see, the mode is at 12 and there is a long tail. Even though most
@@ -406,19 +406,19 @@ average percent identity of random alignments.
 |  +1   |    -1    |      |      | 81.3 | low        |
 |  +1   |    -1    |  -2  |  -2  | 71.0 | very low   |
 
-The orignal version of BLAST defaulted to +5/-4 with no gapping allowed. Later,
-this was +1/-3 with gaps -5/-2. The current version is +1/-2 with gaps
--2.5/-2.5. EMBOSS `water` defaults to +5/-4 with gaps -10/-0.5. Clearly,
-despite how critical they are, there is no consensus on the proper default
-alignment parameters.
+The orignal version of BLAST defaulted to +5/-4 with no gapping allowed.
+Later, this was +1/-3 with gaps -5/-2. Later, it was +1/-2 with gaps
+-2.5/-2.5. What is it now? You'll have to check the command line
+options. EMBOSS `water` defaults to +5/-4 with gaps -10/-0.5. Clearly,
+despite how critical they are, there is no consensus on the proper
+default alignment parameters.
 
 Note that there are 2 ways to describe gap costs. NCBI-BLAST versions 2.0+
 follow a linear formula as y = mx + b, where y is the total gap cost, b is the
 gap opening cost, and m is the cost of extending gaps. AB-BLAST (and its
 historical descendents WU-BLAST and NCBI-BLAST 1.4) and EMBOSS `water` and
 `needle` describe the cost of the first gap followed by the cost of additional
-gaps. So the current NCBI-BLASTN scoring scheme is 0/2.5 in their parlance, but
-2.5/2.5 in AB-BLAST and EMBOSS.
+gaps. So, NCBI 3/1 is the same as `water` 4/1.
 
 ### Summary
 
@@ -485,10 +485,12 @@ In fact, they behave identically. The difference is that +1/-1 has a lambda
 twice as large as +2/-2. As a result, it doesn't matter if you use a +1/-1 or
 +2/-2, the e-values will be exactly the same.
 
-It turns out that the K-A equation can be applied to gapped alignments by
-borrowing the lambda from an equally stringent scoring scheme. Basically, you
-do a bunch of random gapped alignments and look for similar percent identities
-to ungapped alignments.
+It turns out that the K-A equation can be applied to gapped alignments
+by borrowing the lambda from an equally stringent scoring scheme.
+Basically, you do a bunch of random gapped alignments and look for
+similar percent identities to ungapped alignments. However, BLAST
+doesn't support all possible gapped scoring schemes. You have to use a
+scoring scheme it already knows about.
 
 ## BLAST
 
@@ -500,7 +502,8 @@ Bl2seq performs a comparison between two sequences (either protiens or nucleotid
 using either the blastn or blastp algorithm. The command compares a sequence against either
 a local databse or a second sequence.
 
-Let's compare the two protiens Gallus gallus and Drosophila melanogaster. They should be in the files `dm.fa` and `gg.fa`.
+Let's compare the two protiens Gallus gallus and Drosophila
+melanogaster. They should be in the files `dm.fa` and `gg.fa`.
 
 ```
 bl2seq -i gg -j dm -p blastp
@@ -520,13 +523,24 @@ Query: 122 IMFETFNTPAMYVAIQAVLSLYASGRTTGIVMDSGDGVTHTVPIYEGYA----LPHAILR 177
 Sbjct: 120 IMFETFNTPAMYVAIQAVLSLYASGRTTGIVLDSGDGVSHTVPIYEGYAAAAALPHAILR 179
 ```
 
-In these two alignments, pluses, minuses, and blank spaces are used to represent different aspects of the alginemnt between the query and the subject.
+In these two alignments, pluses, minuses, and blank spaces are used to
+represent different aspects of the alginemnt between the query and the
+subject.
 
-The plus (+) symbol indicates positions where the amino acids in the aligned sequences are similar. The minus (-) symbol indicates positions where there is an insertion or deletion in one of the sequences. A blank space indicates positions in the alginment where the amino acids have no match or similairties.
+The plus (+) symbol indicates positions where the amino acids in the
+aligned sequences are similar. The minus (-) symbol indicates positions
+where there is an insertion or deletion in one of the sequences. A blank
+space indicates positions in the alginment where the amino acids have no
+match or similairties.
 
-Bl2seq also outputs Lambda, K, and H (variables used to calculate the statistics of alignment, more on them in the previous section about the Karlin - Altschul equation). These vaiables are used to determine the significance of the alignment which helps us understand the validity of its MSP.
+Bl2seq also outputs Lambda, K, and H (variables used to calculate the
+statistics of alignment, more on them in the previous section about the
+Karlin - Altschul equation). These vaiables are used to determine the
+significance of the alignment which helps us understand the validity of
+its MSP.
 
-In the alignment above the Lambda, K, and H variables should be the following:
+In the alignment above the Lambda, K, and H variables should be the
+following:
 
 ```
 Lambda     K      H
