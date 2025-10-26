@@ -644,12 +644,24 @@ from Y.pestis to E.coli.
 
 ### blast (modern)
 
-UNFINISHED CONTENT HERE
+The modern version of blast has some improvements, but also added
+complexity. For most tasks, the programs perform similarly. The program
+to create a blast database is called `makeblastdb`, which creates a few
+more files: `.pdb`, `.pot`, `.pto`, `.ptf`, and `.pjs`. Let's make the
+Y.pesits file into a blast database.
 
+```
+makeblastdb -dbtype prot -in Y.pestis.faa
+```
 
-`makebalstdb` creates a few more files: `.pdb`, `.pot`, `.pto`, `.ptf`,
-and `.pjs`.
+Here's how to search E.coli proteins against the Y.pestis database using
+the equivalent search parameters as before.
 
+```
+blastp -db Y.pestis.faa -query E.coli.faa -evalue 1e-5 -num_threads 4
+```
+
+### UNFINISHED
 
 - multiple HSPs
 - algorithmic details
