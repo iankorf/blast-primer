@@ -647,7 +647,10 @@ from Y.pestis to E.coli.
 The modern version of blast has some improvements, but also added
 complexity. For most tasks, the programs perform similarly. The program
 to create a blast database is called `makeblastdb`, which creates a few
-more files: `.pdb`, `.pot`, `.pto`, `.ptf`, and `.pjs`. Let's make the
+more files: `.pdb`, `.pot`, `.pto`, `.ptf`, and `.pjs`. Note that even
+though some of the file extensions are exactly the same between legacy
+and modern blast, the files aren't exactly the same. Choose to use
+either legacy blast or modern blast. Don't mix them. Let's make the
 Y.pesits file into a blast database.
 
 ```
