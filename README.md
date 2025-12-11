@@ -39,7 +39,7 @@ application to get to the CLI.
 Install conda via the miniforge installer. You can use `curl` or `wget`.
 
 ```
-curl -fsSLo Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-$(uname -m).sh"
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 ```
 
 Don't do both of these.
