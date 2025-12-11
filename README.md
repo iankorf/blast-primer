@@ -17,26 +17,33 @@ with these topics, some parts of this will be confusing. This primer is meant
 for my students and interns, so there isn't much hand-holding for the general
 public. You will need to be comfortable with a Unix CLI to proceed.
 
-This primer assumes you have an x86/AMD chipset running Linux (either
-native or virtualized in Windows) or a Mac. If you're on Windows or
-using some unusual OS or hardware, some parts of the exercises may fail.
+This primer assumes you have an x86/AMD chipset running Linux or Windows or a
+Mac. If you're using an unusual OS or hardware, some parts of the exercises may
+fail.
 
 ## Setup
 
 ### Mac
 
 Your computer is already running a Unix called Darwin. Open your `Terminal`
-application to get to the CLI.
+application to get to the CLI. If you haven't installed the command line tools
+before, do so now.
+
+```
+xcode-select --install
+```
 
 ### Windows
 
-- Install VirtualBox
-- Create a VM with 4G RAM and a flexible size drive of 40G
-- Install a lightweight Linux distribution like Lubuntu, LinuxLite, or Mint
+Either install the Windows Subsystem for Linux (WSL) via the Microsoft store
+(it's free) or Install VirtualBox (also free). There are lots of Linux
+distributions available either way. Popular choices include Ubuntu and Debian.
+There are lots of guides and videos online.
 
 ### Install Conda
 
-Install conda via the miniforge installer. You can use `curl` or `wget`.
+If you don't already have conda installed, install conda via the miniforge
+installer. You can use `curl` or `wget`.
 
 ```
 curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
@@ -382,7 +389,7 @@ like. In order to understand this random background better, let's perform this
 experiment 1000 times. This should take about a minute.
 
 ```
-/evd --length 2000 --matrix m+1-1.mat --count 1000 > out
+./evd --length 2000 --matrix m+1-1.mat --count 1000 > out
 ```
 
 The file `out` contains all of the scores, lengths, and percent identities of
