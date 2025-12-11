@@ -17,37 +17,71 @@ with these topics, some parts of this will be confusing. This primer is meant
 for my students and interns, so there isn't much hand-holding for the general
 public. You will need to be comfortable with a Unix CLI to proceed.
 
-This primer assumes you have an x86/AMD chipset running Linux (either native or
-virtualized in Windows) or an older Mac with an Intel chipset. If any of the
-following situations apply to you, expect some pain if not outright failure.
-
-- Newer (post-2020-ish) Mac with Apple Silicon chips
-- Windows running Windows Substem for Linux (WSL)
-- Windows running Cygwin
-- Windows running GitBash
-- ChromeOS
-- Raspberry Pi or other SBC
+This primer assumes you are running Linux on Intel (either native or
+virtualized in Windows) or a Mac. Other configurations (Windows, WSL, Cygwin,
+Gitbash, ChromeOS, Raspberri Pi) may involve some pain.
 
 ## Setup
 
-### Intel-Mac
+### Mac
 
-If you have an older Mac (pre-2020-ish), you already have a Unix CLI. Just open
-your `Terminal` application.
+Your computer is already running a Unix called Darwin. Open your `Terminal`
+application to get to the CLI.
 
 ### Windows
 
 - Install VirtualBox
-- Create a VM with 2-4G RAM and a flexible size drive of 40G
+- Create a VM with 4G RAM and a flexible size drive of 40G
 - Install a lightweight Linux distribution like Lubuntu, LinuxLite, or Mint
+
+### Install Conda
+
+Install conda via the miniforge installer. You can use `curl` or `wget`.
+
+```
+curl -fsSLo Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-$(uname -m).sh"
+```
+
+Don't do both of these.
+
+```
+wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+```
+
+Run the shell script to install conda.
+
+```
+bash Miniforge3-$(uname)-$(uname -m).sh
+```
+
+Open a new terminal. You should see `(base)` at the start of the CLI. If you do
+not, seek help.
+
 
 ### Install EMBOSS and BLAST
 
-Install Miniforge. Then create a conda environment with EMBOSS and BLAST.
+The conda environment is specified in `blast-primer.yml`. Examine the file and
+you will see that it specifies the environment name `blast-primer` and 2
+packages: `emboss` and `blast-legacy`.
+
+```
+cat blast-primer.yml
+```
+
+Install the emboss and blast-legacy packages with the following command:
 
 ```
 conda env create -f blast-primer.yml
 ```
+
+Activate the `blast-primer` environment:
+
+```
+conda activate blast-primer
+```
+
+You now have access to several new programs.
+
 
 ## Global and Local Alignment
 
