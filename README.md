@@ -17,9 +17,9 @@ with these topics, some parts of this will be confusing. This primer is meant
 for my students and interns, so there isn't much hand-holding for the general
 public. You will need to be comfortable with a Unix CLI to proceed.
 
-This primer assumes you are running Linux on Intel (either native or
-virtualized in Windows) or a Mac. Other configurations (Windows, WSL, Cygwin,
-Gitbash, ChromeOS, Raspberri Pi) may involve some pain.
+This primer assumes you have an x86/AMD chipset running Linux (either
+native or virtualized in Windows) or a Mac. If you're on Windows or
+using some unusual OS or hardware, some parts of the exercises may fail.
 
 ## Setup
 
@@ -361,7 +361,7 @@ are not bell curve, but a smushed bell curve called an extreme value
 distribution (EVD). Let's make a quick histogram to observe.
 
 ```
-cut -f out | sort -n | uniq -c
+cut -f1 out | sort -n | uniq -c
 ```
 
 As you can see, the mode is at 12 and there is a long tail. Even though most
@@ -440,19 +440,19 @@ average percent identity of random alignments.
 |  +1   |    -1    |      |      | 81.3 | low        |
 |  +1   |    -1    |  -2  |  -2  | 71.0 | very low   |
 
-The orignal version of BLAST defaulted to +5/-4 with no gapping allowed. Later,
-this was +1/-3 with gaps -5/-2. The current version is +1/-2 with gaps
--2.5/-2.5. EMBOSS `water` defaults to +5/-4 with gaps -10/-0.5. Clearly,
-despite how critical they are, there is no consensus on the proper default
-alignment parameters.
+The orignal version of BLAST defaulted to +5/-4 with no gapping allowed.
+Later, this was +1/-3 with gaps -5/-2. Later, it was +1/-2 with gaps
+-2.5/-2.5. What is it now? You'll have to check the command line
+options. EMBOSS `water` defaults to +5/-4 with gaps -10/-0.5. Clearly,
+despite how critical they are, there is no consensus on the proper
+default alignment parameters.
 
 Note that there are 2 ways to describe gap costs. NCBI-BLAST versions 2.0+
 follow a linear formula as y = mx + b, where y is the total gap cost, b is the
 gap opening cost, and m is the cost of extending gaps. AB-BLAST (and its
 historical descendents WU-BLAST and NCBI-BLAST 1.4) and EMBOSS `water` and
 `needle` describe the cost of the first gap followed by the cost of additional
-gaps. So the current NCBI-BLASTN scoring scheme is 0/2.5 in their parlance, but
-2.5/2.5 in AB-BLAST and EMBOSS.
+gaps. So, NCBI 3/1 is the same as `water` 4/1.
 
 ### Summary
 
@@ -519,25 +519,26 @@ In fact, they behave identically. The difference is that +1/-1 has a lambda
 twice as large as +2/-2. As a result, it doesn't matter if you use a +1/-1 or
 +2/-2, the e-values will be exactly the same.
 
-It turns out that the K-A equation can be applied to gapped alignments by
-borrowing the lambda from an equally stringent scoring scheme. Basically, you
-do a bunch of random gapped alignments and look for similar percent identities
-to ungapped alignments.
+It turns out that the K-A equation can be applied to gapped alignments
+by borrowing the lambda from an equally stringent scoring scheme.
+Basically, you do a bunch of random gapped alignments and look for
+similar percent identities to ungapped alignments. However, BLAST
+doesn't support all possible gapped scoring schemes. You have to use a
+scoring scheme it already knows about.
 
 ## BLAST
 
-Unfinished section
+### bl2seq
 
-## bl2seq examples to follow above
+Bl2seq performs a comparison between two sequences (either protiens or
+nucleotides) using either the blastn or blastp algorithm. The command
+compares a sequence against either a local databse or a second sequence.
 
-Bl2seq performs a comparison between two sequences (either protiens or nucleotides)
-using either the blastn or blastp algorithm. The command compares a sequence against either
-a local databse or a second sequence.
-
-Let's compare the two protiens Gallus gallus and Drosophila melanogaster. They should be in the files `dm.fa` and `gg.fa`.
+Let's compare the two protiens Gallus gallus and Drosophila
+melanogaster. They should be in the files `dm.fa` and `gg.fa`.
 
 ```
-bl2seq -i gg -j dm -p blastp
+bl2seq -i gg.fa -j dm.fa -p blastp
 ```
 
 Once this command is run, you should see an output detailing the alignment of the two sequences.
@@ -554,13 +555,24 @@ Query: 122 IMFETFNTPAMYVAIQAVLSLYASGRTTGIVMDSGDGVTHTVPIYEGYA----LPHAILR 177
 Sbjct: 120 IMFETFNTPAMYVAIQAVLSLYASGRTTGIVLDSGDGVSHTVPIYEGYAAAAALPHAILR 179
 ```
 
-In these two alignments, pluses, minuses, and blank spaces are used to represent different aspects of the alginemnt between the query and the subject.
+In these two alignments, pluses, minuses, and blank spaces are used to
+represent different aspects of the alginemnt between the query and the
+subject.
 
-The plus (+) symbol indicates positions where the amino acids in the aligned sequences are similar. The minus (-) symbol indicates positions where there is an insertion or deletion in one of the sequences. A blank space indicates positions in the alginment where the amino acids have no match or similairties.
+The plus (+) symbol indicates positions where the amino acids in the
+aligned sequences are similar. The minus (-) symbol indicates positions
+where there is an insertion or deletion in one of the sequences. A blank
+space indicates positions in the alginment where the amino acids have no
+match or similairties.
 
-Bl2seq also outputs Lambda, K, and H (variables used to calculate the statistics of alignment, more on them in the previous section about the Karlin - Altschul equation). These vaiables are used to determine the significance of the alignment which helps us understand the validity of its MSP.
+Bl2seq also outputs Lambda, K, and H (variables used to calculate the
+statistics of alignment, more on them in the previous section about the
+Karlin - Altschul equation). These vaiables are used to determine the
+significance of the alignment which helps us understand the validity of
+its MSP.
 
-In the alignment above the Lambda, K, and H variables should be the following:
+In the alignment above the Lambda, K, and H variables should be the
+following:
 
 ```
 Lambda     K      H
@@ -571,8 +583,125 @@ Lambda     K      H
    0.267   0.0410    0.140
 ```
 
-- blast databases
-- more
+### blast-legacy
+
+BLAST is usually used to search/align one (or more) sequences to a
+databases of sequences. For example, we could search all of the E.coli
+proteins vs. all of the Y.pestis proteins. To do that, one of the fasta
+files must be turned into the database. The command that turns fasta
+files into blast-able databases is called `formatdb`.
+
+```
+formatdb -i E.coli.faa
+```
+
+After running `formatdb`, you should see some new files with extensions
+`.phr`, `.psq`, and `.pin`. These files comprise the blast database.
+
+Our stated goal was to align all of the Y.pestis proteins to E.coli.
+However, we don't have any idea how long that will take. It could take
+seconds or hours. So the first thing we should do is make a subset of
+the Y.pestis proteome and search that against E.coli. A simple `wc` will tell us
+how many lines are in the file.
+
+```
+wc Y.pestis.faa
+```
+
+There are about 24k lines. Let's make a smaller version of Y.pestis containing
+about 1% of that total.
+
+```
+head -2400 Y.pestis.faa > mini.faa
+```
+
+A simple `grep` verifies that there are around 1% of the proteins in the
+`mini.faa` compare to the full proteome.
+
+```
+grep -c ">" Y.pestis.faa mini.faa
+```
+
+Now it's finally time to run BLAST. Since both the query and database
+are proteins, the program type is `blastp`. We'll save the output in a
+throwaway file called `foo`. We'll prepend the command with `time` to
+monitor resources. Here's the command line:
+
+```
+time blastall -p blastp -d E.coli.faa -i mini.faa > foo
+```
+
+This should take under 10 seconds (depending on your hardware). You will
+see a few warnings about Selenocysteine that you can ignore. Examine the
+output file with `less foo`. By default, BLAST reports alignment with
+high E-values, which represent random similarities. In the future, we
+will set `-e 1e-5` to remove the really poor alignments.
+
+By default `blastall` uses only 1 cpu. You can speed up the search by
+giving it more CPUs with the `-a` parameter. Here are the results I got
+with additional CPUs.
+
+| CPUs | Time | CLI
+|:----:|:----:|:-------------------------------------------------------
+|   1  | 2.17 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 1 > foo`
+|   2  | 1.31 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 2 > foo`
+|   3  | 1.08 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 3 > foo`
+|   4  | 0.92 | `blastp -d E.coli.faa -i mini.faa -e 1e-5 -a 4 > foo`
+
+As you can see, there are diminishing returns with more CPUs. Some parts
+of BLAST cannot be parallelized across multiple CPUs. For example, all
+of the CPUs must eventually write their output, and this is not
+parallelized.
+
+Now it's time to search the whole Y.pestis proteome against the whole
+E.coli proteome. We can now estimate how long the job will take: about
+100x longer with the full Y.pestis proteome. In reality, it may take
+longer or shorter than the estimate, but at least you have some idea.
+
+```
+blastall -p blastp -d E.coli.faa -i Y.pestis.faa -e 1e-5 -a 4 > yve.blastp
+```
+
+### Parsing a BLAST report
+
+The `yve.blastp` output file is 28M. That's a lot of text to look
+through for a human. If you don't need to examine the alignments, you
+can get the numerical data by changing the output format to tabular
+using `-m 9`. This reduces the file to just 3M.
+
+Here are a couple BLAST-based programming challenges:
+
+1. Maybe the unique proteins in Y.pestis are what cause plague. Find
+which proteins are in Y.pestis but not E.coli.
+
+2. Find the orthologs between E.coli and Y.pestis. Orthologs are defined
+as the reciprocal best match. That is, the best matching pair of
+proteins going from E.coli to Y.pestis are the same as the best pair
+from Y.pestis to E.coli.
+
+### blast (modern)
+
+The modern version of blast has some improvements, but also added
+complexity. For most tasks, the programs perform similarly. The program
+to create a blast database is called `makeblastdb`, which creates a few
+more files: `.pdb`, `.pot`, `.pto`, `.ptf`, and `.pjs`. Note that even
+though some of the file extensions are exactly the same between legacy
+and modern blast, the files aren't exactly the same. Choose to use
+either legacy blast or modern blast. Don't mix them. Let's make the
+Y.pesits file into a blast database.
+
+```
+makeblastdb -dbtype prot -in Y.pestis.faa
+```
+
+Here's how to search E.coli proteins against the Y.pestis database using
+the equivalent search parameters as before.
+
+```
+blastp -db Y.pestis.faa -query E.coli.faa -evalue 1e-5 -num_threads 4
+```
+
+### UNFINISHED
 
 - multiple HSPs
 - algorithmic details

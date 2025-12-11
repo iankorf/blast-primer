@@ -6,3 +6,8 @@ channels:
 dependencies:
   - emboss
   - blast-legacy
+<<<<<<< HEAD
+=======
+  - blast
+  - time
+>>>>>>> 49e7d201dea00ca74c2992a0eca218142b821c57
