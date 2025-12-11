@@ -48,7 +48,7 @@ with open(out) as fp:
 		if line.startswith('# Score:'):
 			scores.append(float(line[9:-1]))
 		if line.startswith('# Identity:'):
-			m = re.search('(\d+)\/(\d+)', line)
+			m = re.search(r'(\d+)\/(\d+)', line)
 			identities =  int(m.group(1))
 			length = int(m.group(2))
 			lengths.append(length)

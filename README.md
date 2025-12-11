@@ -48,7 +48,8 @@ Don't do both of these.
 wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 ```
 
-Run the shell script to install conda.
+Run the shell script to install conda. Enter `yes` for the license agreement
+and `yes` to install the base environment on startup.
 
 ```
 bash Miniforge3-$(uname)-$(uname -m).sh
@@ -80,7 +81,8 @@ Activate the `blast-primer` environment:
 conda activate blast-primer
 ```
 
-You now have access to several new programs.
+You now have access to several new programs in the `emboss` and `blast-legacy`
+packages.
 
 
 ## Global and Local Alignment
@@ -102,7 +104,7 @@ WATER
 >s2
 WETTER
 >s3
-THEWEATHERISCALM
+HALFWAYTHERE
 ```
 
 Now let's align them with the `needle` program to observe how global alignment
@@ -138,9 +140,9 @@ These two sequences are very different in length. Most of the alignment is
 gaps. This is one reason global alignment isn't used very often.
 
 ```
-s1                 1 ---W-ATER-------      5
-                        | ||..
-s3                 1 THEWEATHERISCALM     16
+s1                 1 ----WA--TER-      5
+                         ||  .||
+s3                 1 HALFWAYTHERE     12
 ```
 
 ### Local Alignment Examples
@@ -172,22 +174,41 @@ less out
 As you can see, only letter aligned. Believe it or not, this is the best local
 similarity between the two sequences, which is called the "maximum scoring
 pair" or MSP. The `water` program is an implementation of the Smith-Waterman
-algorith, which finds a single MSP (even if there is more than one alignment
+algorithm, which finds a single MSP (even if there is more than one alignment
 with the same score, the algorithm only returns one).
 
 ```
-s1                 1 W      1
-                     |
-s3                 4 W      4
+s1                 1 WA      2
+                     ||
+s3                 5 WA      6
 ```
 
-You might be asking yourself why the local alignment isn't longer. It's because
-of the default gap penalties we accepted. You might also be asking why aligning
-a single `W` in each sequence is better than aligning the pair of `AT`s found
-in both `WATER` and `WEATHER`. It's because the score of alinging tryptophan
-(W) is greater than aligning both an alanine (A) and threonine (T). The reason
-why W has a greater score is because scores are essentially log odds ratios of
-observed / expected and tryptophan is a very rare amino acid.
+You might be asking yourself why the local alignment isn't longer. Let's take a
+closer look at the global alignment.
+
+```
+s1                 1 ----WA--TER-      5
+                         ||  .||
+s3                 1 HALFWAYTHERE     12
+```
+
+The gap characters result in a large score penalty. The only way to absorb the
+penalty of a gap is to have enough matches on either side. The score of
+aligning `WA` to `WA` is much greater than `TER` to `HER`. The `WA` alignment
+gets 11 for the tryptophan matches and 4 for the Alanine matches for a total of
+15 (which is the alignment score for `water`). The `TER` to `HER` match
+generates -2, +5, +5. So in fact, it's better to consider `ER` as the matching
+part. 15 is greater than 10 so that's why the best local alignment is just the
+`WA`. If you want to see the scoring matrix used, you will find it here:
+
+```
+less ~/miniforge3/envs/blast-primer/data/BLOSUM62
+```
+
+You might be wondering why pairing `W` is worth more than pairing other amino
+acids. It's because scoring matrix values are log-odds transformations of
+observed divided by expected. `W` is a rare amino acid, so it's not expected to
+occur very often. Therefore, when you see it, it's worth more.
 
 ## Random Expectation
 
@@ -196,9 +217,9 @@ comparison. This is usually some form of random expectation. Let's look at what
 random expectation looks like for sequence alignment, because it's probably not
 what you expect. For this exercise, and the ones that follow, we will be using
 nucleotide sequences with simple scoring schemes where all matches receive the
-same score (unlike the tryptophan story above).
+same score (unlike BLOSUM62 above).
 
-Both global and local alignment are based on optimizing an alignent _score_.
+Both global and local alignment are based on optimizing an alignment _score_.
 You generally gain score when letters are the same and lose score when they are
 different. In a simple scoring scheme, there are 3 types of scores.
 
@@ -208,7 +229,7 @@ different. In a simple scoring scheme, there are 3 types of scores.
 
 In the global and local alignment examples above, we didn't pay much attention
 to the alignment parameters (match, mismatch, gap), but it turns out that they
-are ABSOLUTELY CRITICAL. Let's explore with random sequences.
+are ABSOLUTELY CRITICAL. Let's explore this with random sequences.
 
 Take a look at the FASTA file `rseq.fa`. This contains two sequences that were
 generated randomly using the script `randomseq` included in the repo.
@@ -232,7 +253,7 @@ water -asequence rseq.fa -bsequence rseq.fa -gapopen 1 -gapextend 1 -datafile m+
 The `out` file contains two alignments, `random-1` aligned to `random-1` and
 `random-1` aligned to `random-2`. It should be no surprise that when `random-1`
 is aligned to itself, that it matches perfectly along its entire length with a
-score of 100. But what about the other?
+score of 100. But what about the other alignment 1 vs 2?
 
 ```
 random-1           6 TAGACATATAGGCTCACACGGG-TTT-GGGCTGCCGA--T-AT-CCGGTA     49
@@ -245,7 +266,7 @@ random-2          63 A--CTGCCAAATCTAAAGCA     80
 ```
 
 This alignment is reported to have 64.3% identity with 45/70 matches and 17/70
-gaps. There is more than one way to calculate percent identity.
+gaps. Note that there is more than one way to calculate percent identity.
 
 1. number of matches divided by length of alignment (count gaps)
 2. number of matches divided by matches plus mismatches (ignore gaps)
@@ -254,7 +275,8 @@ Is the alignment above (1) 64.3% identical or (2) 84.9% identical? The problem
 with (1) is that denominator can be larger than either sequence length. The
 problem with (2) is that one shouldn't ignore gaps if they are present. Both
 methods work similarly when the are few gaps, which is what happens most of the
-time (provided you don't use idiotic alignment parameters).
+time (provided you don't use idiotic alignment parameters). But it's worth
+noting that something as simple as percent identity is up to interpretation.
 
 ### Varying Gap Cost
 
@@ -301,15 +323,21 @@ random-1          93 TTACGCT     99
 random-2          85 TTACGCT     91
 ```
 
-### Complex Gaps
+Which one of these alignments is the _correct_ one? They are all maximally
+scoring under different scoring systems. When you choose a scoring system,
+which you must do, you are affecting the alignment outcome.
+
+### Affine Gaps
 
 The previous examples used the same gap open and extension cost. That is a gap
-that is 10 nt long costs 10 times that of a single gap. Sequence gaps tend to
-come in clusters, so we often use a two gap costs, one to open, and one to
-extend. Let's see what happens when we vary the two.
-
-Here is what happens with gapopen 2 and gapextend 1. As you can see, it's
-not the same as any of the previous alignments.
+that is 10 nt long costs 10 times that of a single gap. Graphing constant gap
+costs result in a linear relationship going through the origin. In other words:
+y = mx. Biological sequence gaps tend to show up in clusters, so the cost of 4
+gaps might not be much more than 3. In sequence alignment, this is modeled with
+_affine_ gap costs. In other words: y = mx + b. Let's see what happens when the
+gap costs don't go through the origin. Here is what happens with gapopen 2 and
+gapextend 1. As you can see, it's not the same as any of the previous
+alignments.
 
 ```
 random-1          43 TCCGGTAATCCTGCAAA-CTAGCACCTATCGACATG     77
@@ -317,19 +345,22 @@ random-1          43 TCCGGTAATCCTGCAAA-CTAGCACCTATCGACATG     77
 random-2           2 TCCGGT--GCC-CCAAAGCTAACA-TTAGCGATATG     33
 ```
 
+So is it better to have constant or affine gaps? Again, you get to choose. But
+what should you choose?
+
 ### Ungapped Alignment
 
 The examples above kept the match (+1) and mismatch (-1) scores the same and
 changed the gap costs. Let's see what happens if we change the match and
 mismatch scores while leaving the gap costs at -10. With such high gap
-penalties, the there won't be many gaps. This will give us some insight into
-the ungapped similarities of random sequences. This isn't just an exercise. It
+penalties, the there won't be any gaps. This will give us some insight into the
+ungapped similarities of random sequences. This isn't just an exercise. It
 turns out, that the entire foundation of local alignment statistics is based on
 random ungapped alignments.
 
 The `evd` program in this repo creates random sequences and aligns them with
 `water`. Here's an example command line that creates 2 random sequences of
-length 2000, aligns them with a +1/-1 scoring scheme.
+length 2000, and then aligns them with a +1/-1 scoring scheme.
 
 ```
 ./evd --length 2000 --matrix m+1-1.mat --count 2 --verbose
@@ -348,7 +379,7 @@ r1               553 ATATATGACAGTTATTGCCGGACA    576
 Try running this a few times and you'll see a bunch of different alignments.
 Recall that the whole point of this is to see what random similarity looks
 like. In order to understand this random background better, let's perform this
-experiment 1000 times.
+experiment 1000 times. This should take about a minute.
 
 ```
 /evd --length 2000 --matrix m+1-1.mat --count 1000 > out
@@ -366,8 +397,8 @@ cut -f1 out | sort -n | uniq -c
 
 As you can see, the mode is at 12 and there is a long tail. Even though most
 alignments have scores from 12.0 to 14.0, it's possible to get really high
-scores like 20. However it's very difficult for the maximum score to be a very
-low score.
+scores like 20. However it's very difficult for the maximum score to be a low
+score, like 9.
 
 ```
      85 11.0
@@ -385,12 +416,19 @@ Let's examine the average score, average length, and average percent identity.
 
 ```
 awk '{t1+=$1; t2+=$2; t3+=$3; n++} END {print t1/n, t2/n, t3/n }' out
+```
+
+That `awk` script does some quick math. Don't worry if `awk` is unfamiliar to
+you. You could do this in any programming language quickly enough. Here's the
+answer I got (which will be a little different from you).
+
+```
 12.8458 22.8659 80.2933
 ```
 
 The average alignment has a score of 12.8, a length of 22.9, and about 80%
-identity. Now comes the really interesting part. Let's change the alignment
-parameters and examine the properties of the alignments. The table below
+identity. Now comes the really interesting part. Let's change the mismatch
+parameter and examine the properties of the alignments. The table below
 summarizes a couple runs of `evd` with different match and mismatch values.
 
 | Match | Mismatch | Score | Length | Percent |
@@ -421,8 +459,9 @@ constant.
 |  +1   |    -2    |  -2  |  -1  | 10.90 | 19.12  |  87.53  |
 |  +1   |    -1    |  -2  |  -2  | 13.97 | 49.11  |  70.97  |
 
-Notice that the smaller the gap penalties, the longer and lower pecent identity
-of the alignment.
+Notice that the smaller the gap penalties, the longer and lower percent
+identity of the alignment. It's easier to make alignments if you allow gaps,
+and the lower the gap costs, the easier it gets.
 
 ### Synthesis
 
@@ -440,17 +479,19 @@ average percent identity of random alignments.
 |  +1   |    -1    |      |      | 81.3 | low        |
 |  +1   |    -1    |  -2  |  -2  | 71.0 | very low   |
 
-The orignal version of BLAST defaulted to +5/-4 with no gapping allowed.
-Later, this was +1/-3 with gaps -5/-2. Later, it was +1/-2 with gaps
--2.5/-2.5. What is it now? You'll have to check the command line
-options. EMBOSS `water` defaults to +5/-4 with gaps -10/-0.5. Clearly,
-despite how critical they are, there is no consensus on the proper
-default alignment parameters.
+The original version of BLAST defaulted to +5/-4 with no gapping allowed.
+Later, this was +1/-3 with gaps -5/-2. Later, it was +1/-2 with gaps -2.5/-2.5.
+What is it now? You'll have to check the command line options. EMBOSS `water`
+defaults to +5/-4 with gaps -10/-0.5. Clearly, despite how critical they are,
+there is no consensus on the proper default alignment parameters. This is sort
+of like hybridization kinetics. There is no one setting for a PCR machine that
+works for all oligos. Each person must set up the machine for their primers.
+And so it should be with BLAST.
 
 Note that there are 2 ways to describe gap costs. NCBI-BLAST versions 2.0+
 follow a linear formula as y = mx + b, where y is the total gap cost, b is the
 gap opening cost, and m is the cost of extending gaps. AB-BLAST (and its
-historical descendents WU-BLAST and NCBI-BLAST 1.4) and EMBOSS `water` and
+historical descendants WU-BLAST and NCBI-BLAST 1.4) and EMBOSS `water` and
 `needle` describe the cost of the first gap followed by the cost of additional
 gaps. So, NCBI 3/1 is the same as `water` 4/1.
 
@@ -467,7 +508,8 @@ Any two sequences compared by Smith-Waterman will have a maximum scoring pair.
 It doesn't matter if the sequences are related or not: there will always be an
 MSP. By analogy, you could compare two completely different books, a fantasy
 novel written in English and a home repair guide in French, and they would
-still have an MSP. So the next logical question is this: is the MSP any good?
+still have an MSP. So the next logical question is this: how can you tell if
+the MSP is any good?
 
 One of the important innovations of BLAST is that it implemented
 Karlin-Altschul statistics. The K-A equation tells us how often a score can
@@ -503,11 +545,11 @@ The K-A equation makes a few assumptions:
 
 1. A positive score must be possible
 2. The expected score must be negative
-3. The letters in the sequences are independent and identially distributed
+3. The letters in the sequences are independent and identically distributed
 4. The sequences are infinitely long
 5. The alignments do not contain gaps
 
-Many of these assumptions are violoated by real biological sequences. Of course
+Many of these assumptions are violated by real biological sequences. Of course
 no sequences are infinitely long. One of the most troublesome assumptions is
 that alignments have no gaps. The reason BLAST was originally an ungapped
 alignment algorithm was because it used the K-A equation to estimate the
@@ -530,12 +572,12 @@ scoring scheme it already knows about.
 
 ### bl2seq
 
-Bl2seq performs a comparison between two sequences (either protiens or
+Bl2seq performs a comparison between two sequences (either proteins or
 nucleotides) using either the blastn or blastp algorithm. The command
-compares a sequence against either a local databse or a second sequence.
+compares a sequence against either a local database or a second sequence.
 
-Let's compare the two protiens Gallus gallus and Drosophila
-melanogaster. They should be in the files `dm.fa` and `gg.fa`.
+Let's compare the two actin proteins from Gallus gallus (chicken) and
+Drosophila melanogaster (fruit fly). They are in the files `dm.fa` and `gg.fa`.
 
 ```
 bl2seq -i gg.fa -j dm.fa -p blastp
@@ -556,20 +598,19 @@ Sbjct: 120 IMFETFNTPAMYVAIQAVLSLYASGRTTGIVLDSGDGVSHTVPIYEGYAAAAALPHAILR 179
 ```
 
 In these two alignments, pluses, minuses, and blank spaces are used to
-represent different aspects of the alginemnt between the query and the
+represent different aspects of the alignment between the query and the
 subject.
 
 The plus (+) symbol indicates positions where the amino acids in the
 aligned sequences are similar. The minus (-) symbol indicates positions
 where there is an insertion or deletion in one of the sequences. A blank
-space indicates positions in the alginment where the amino acids have no
-match or similairties.
+space indicates positions in the alignnment where the amino acids have no
+match or similarities.
 
 Bl2seq also outputs Lambda, K, and H (variables used to calculate the
-statistics of alignment, more on them in the previous section about the
-Karlin - Altschul equation). These vaiables are used to determine the
-significance of the alignment which helps us understand the validity of
-its MSP.
+statistics of alignment). These variables are used to determine the
+significance of the alignment which helps us understand the validity of its
+MSP.
 
 In the alignment above the Lambda, K, and H variables should be the
 following:
@@ -585,11 +626,12 @@ Lambda     K      H
 
 ### blast-legacy
 
-BLAST is usually used to search/align one (or more) sequences to a
-databases of sequences. For example, we could search all of the E.coli
-proteins vs. all of the Y.pestis proteins. To do that, one of the fasta
-files must be turned into the database. The command that turns fasta
-files into blast-able databases is called `formatdb`.
+BLAST is usually used to search/align one (or more) sequences to a databases of
+sequences. For example, we could search all of the E.coli proteins vs. all of
+the Y.pestis proteins (Yersinia pestis is the bacterium responsible for bubonic
+plague). To do that, one of the fasta files must be turned into the database.
+The command that turns fasta files into blast-able databases is called
+`formatdb`.
 
 ```
 formatdb -i E.coli.faa
@@ -616,7 +658,7 @@ head -2400 Y.pestis.faa > mini.faa
 ```
 
 A simple `grep` verifies that there are around 1% of the proteins in the
-`mini.faa` compare to the full proteome.
+`mini.faa` compared to the full proteome.
 
 ```
 grep -c ">" Y.pestis.faa mini.faa
@@ -631,11 +673,13 @@ monitor resources. Here's the command line:
 time blastall -p blastp -d E.coli.faa -i mini.faa > foo
 ```
 
-This should take under 10 seconds (depending on your hardware). You will
-see a few warnings about Selenocysteine that you can ignore. Examine the
-output file with `less foo`. By default, BLAST reports alignment with
-high E-values, which represent random similarities. In the future, we
-will set `-e 1e-5` to remove the really poor alignments.
+Given how long it took for `water` to align 1000 sequences to each other, you
+might think it will take `blastp` a long time to align 494 Y.pestis proteins to
+4298 E.coli proteins. It does't. This should take under 10 seconds (depending
+on your hardware). You will see a few warnings about Selenocysteine that you
+can ignore. Examine the output file with `less foo`. By default, BLAST reports
+alignment with high E-values, which represent random similarities. In the
+future, we will set `-e 1e-5` to remove the really poor alignments.
 
 By default `blastall` uses only 1 cpu. You can speed up the search by
 giving it more CPUs with the `-a` parameter. Here are the results I got
@@ -664,56 +708,34 @@ blastall -p blastp -d E.coli.faa -i Y.pestis.faa -e 1e-5 -a 4 > yve.blastp
 
 ### Parsing a BLAST report
 
-The `yve.blastp` output file is 28M. That's a lot of text to look
-through for a human. If you don't need to examine the alignments, you
-can get the numerical data by changing the output format to tabular
-using `-m 9`. This reduces the file to just 3M.
-
-Here are a couple BLAST-based programming challenges:
-
-1. Maybe the unique proteins in Y.pestis are what cause plague. Find
-which proteins are in Y.pestis but not E.coli.
-
-2. Find the orthologs between E.coli and Y.pestis. Orthologs are defined
-as the reciprocal best match. That is, the best matching pair of
-proteins going from E.coli to Y.pestis are the same as the best pair
-from Y.pestis to E.coli.
-
-### blast (modern)
-
-The modern version of blast has some improvements, but also added
-complexity. For most tasks, the programs perform similarly. The program
-to create a blast database is called `makeblastdb`, which creates a few
-more files: `.pdb`, `.pot`, `.pto`, `.ptf`, and `.pjs`. Note that even
-though some of the file extensions are exactly the same between legacy
-and modern blast, the files aren't exactly the same. Choose to use
-either legacy blast or modern blast. Don't mix them. Let's make the
-Y.pesits file into a blast database.
+The `yve.blastp` output file is 28M. That's a lot of text to look through for a
+human. If you don't need to examine the alignments, you can get the numerical
+data by changing the output format to tabular using `-m 9`. This reduces the
+file to just 3M. Let's try that. Also we'll add another parameter `-f 13` to
+make the search go faster at the cost of sensitivity.
 
 ```
-makeblastdb -dbtype prot -in Y.pestis.faa
+blastall -p blastp -d E.coli.faa -i Y.pestis.faa -e 1e-5 -a 4 -m 9 -f 13 > yve.tsv
 ```
 
-Here's how to search E.coli proteins against the Y.pestis database using
-the equivalent search parameters as before.
+Page through the outputs with `less` to get a feeling for what a proteome to
+proteome alignment looks like.
 
 ```
-blastp -db Y.pestis.faa -query E.coli.faa -evalue 1e-5 -num_threads 4
+less yve.blastp
+less yve.tsv
 ```
 
-### UNFINISHED
+You might notice that some query sequences from Y.pestis have multiple matches
+in E.coli and some have none. How could you display the number of matches?
 
-- multiple HSPs
-- algorithmic details
-  - seeding
-  - extension
-- masking
-  - complexity filters
-  - hard
-  - soft
-  - word
-- gapped vs ungapped
-- e-value adjustments
-  - combined HSPs
-  - length
-  - composition
+```
+grep -v "^#" yve.tsv | less | cut -f1 | uniq -c | less
+```
+
+Note that this doesn't show any zeroes. If a Y.pestis protein doesn't match
+anything in E.coli, it's not in the blast report. What if the genes that make
+Y.pestis "bad" are genes that are specifically not in E.coli?
+
+Look up the `comm` command and then use that to determine how many proteins in
+Y.pestis are not in E.coli.
