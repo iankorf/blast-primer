@@ -737,7 +737,7 @@ You might notice that some query sequences from Y.pestis have multiple matches
 in E.coli and some have none. How could you display the number of matches?
 
 ```
-grep -v "^#" yve.tsv | less | cut -f1 | uniq -c | less
+grep -v "^#" yve.tsv | cut -f1 | uniq -c | less
 ```
 
 Note that this doesn't show any zeroes. If a Y.pestis protein doesn't match
